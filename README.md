@@ -179,4 +179,4 @@ You should receive a message on the email address that you put into the "to" key
 
 ## Special thanks
 
-Guilhem SEYVET <[guilhemcv](https://github.com/guilhemcv)> for the original version of this workshop.
+* [**Guilhem SEYVET**](https://github.com/guilhemcv), who created the original version of this workshop.
