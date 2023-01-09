@@ -1,49 +1,158 @@
-## Concept
+# Configuration de Nodemailer pour ajouter une fonction d'envoi d'e-mail à une application
 
-Ce template est conçu pour servir de base à tous les projets (P2/P3) suivants la stack React-Node-MySQL telle qu'enseignée à la Wild Code School. Il est préconfiguré avec un ensemble d'outils qui aideront les élèves à produire un code correspondant mieux aux standards du monde du travail et plus facile à maintenir, tout en restant simple à utiliser.
+Cet atelier vous montrera comment configurer Nodemailer sur le modèle Wild Code School. Vous serez en mesure d'envoyer un email à partir d'un formulaire utilisateur.
 
-## Installation & Utilisation
+## Configuration du projet
 
-### Pour commencer un projet
+Premièrement, clonez ce projet et exécutez `npm run setup`. La partie FRONT est déjà installée : dans le composant `frontend/src/pages/Contact.jsx`, vous pouvez trouver le formulaire.
 
-- Sur VSCode, installer les plugins **Prettier - Code formatter** et **ESLint** et les configurer
-- Cloner ce dépôt, se rendre à l'intérieur
-- Lancer la commande `npm run setup`
-- _NB: Pour exécuter le backend, un fichier d'environnement avec les données de connexion d'une BdD valide est nécesaire. Un modèle se trouve dans `backend/.env.sample`_
+Allez dans le dossier backend et installez la dépendance nodemailer :
+`npm install nodemailer`.
 
-### Liste des commandes et signification
+## Créer un compte sur Sendinblue
 
-- `setup` : Initialisation du frontend et du backend ainsi que des outils
-- `dev` : Démarrage des deux serveurs (frontend + backend) dans un même terminal
-- `dev-front` : Démarrage d'un serveur React pour le frontend
-- `dev-back` : Démarrage d'un serveur Express pour le backend
-- `lint` : Exécute des outils de validation de code (sera exécutée automatiquement à chaque _commit_)
-- `fix` : Fixe les erreurs de formatage (à lancer si `lint` ne passe pas)
+Sendinblue est une plateforme d'emailing française. En vous inscrivant, vous pourrez utiliser leurs paramètres SMTP pour envoyer des emails depuis votre application.
 
-## Pour plus d'informations
+Créez un compte sur ce site : https://app.sendinblue.com/account/profile/
 
-### Listing des outils utilisés
+Ajoutez toutes les informations nécessaires. Vous recevrez un email de confirmation pour terminer la création du compte. (Sendingblue vous recommande d'utiliser un email professionnel, mais vous pouvez utiliser un email classique comme celui de Gmail).
 
-- _Concurrently_ : Permet d'exécuter plusieurs commandes dans un même terminal
-- _Husky_ : Permet d'exécuter des actions en déclenchement de commandes _git_
-- _Vite_ : Alternative à _Create-React-App_, embarquant moins de packages pour une expérience plus fluide
-- _ESLint_ : Outil de "qualité de code", permet de s'assurer que des règles pré-configurées sont bien respectées
-- _Prettier_ : Outil de "qualité de code" également, se concentre plus particulièrement sur le style du code
-- _Standard Airbnb_ : L'un des "standards" les plus connus, même s'il n'est pas officiellement lié à ES/JS
-- _Nodemon_ : Outil permettant de relancer un serveur à chaque fois qu'un des fichiers est modifié
+Sur votre compte, naviguez dans la rubrique `Transactionel`. Vous y trouverez ces informations :
 
-### Reste à faire
+- Serveur SMTP
+- Port
+- identifiant
+- Clé SMTP (vous devrez peut-être la générer)
 
-Prettier:
+## Mise en place du fichier .env
 
-- corriger la config front/back pour qu'elle suive le même standard qu'ESLint
+Dans le dossier du backend, créez un fichier .env s'il n'existe pas et ajoutez les informations suivantes :
 
-Testing:
+```
+APP_PORT=5005
+FRONTEND_URL=http://localhost:3000
+SMTP_SENDIN=(le serveur SMTP de sendinblue)
+SMTP_PORT_SENDIN=(le prot de sendinblue)
+SMTP_SENDIN_USER=(l'identifiant de sendinblue)
+SMTP_SENDIN_PASSWORD=(la clé de sendinblue)
+```
 
-- ajouter des tests unitaires sur le front et le back, avec les commandes associées
+## Créer le contrôleur de messagerie
 
-Vérifications:
+Allez dans le dossier controllers et créez un fichier `mailControllers.js`.
 
-- s'assurer que les principaux outils utilisés lors de la formation sont compatibles avec ce template
-- deploiements ? Compatible avec Netlify/Vercel/Heroku ?
-- fonctionnement avec yarn/pnpm
+Importez nodemailer et dotenv :
+
+```js
+const nodemailer = require("nodemailer") ;
+require("dotenv").config() ;
+```
+
+Ajoutez et exportez une fonction `sendContactMail`. Rappelez-vous : une fonction qui accepte une requête et renvoit une réponse prend en paramètre `req` et `res`.
+Nous allons récupérer quelques informations à partir du `req.body`.
+
+```js
+const sendContactMail = (req, res) => {
+  const {nom, prénom, téléphone, email, message } = req.body ;
+} ;
+
+module.exports = {
+  sendContactMail,
+} ;
+```
+
+Ensuite, nous devons créer un transporteur dans lequel nous allons mettre en place notre serveur SMTP :
+
+```js
+const sendContactMail = (req, res) => {
+  const {nom, prénom, téléphone, email, message} = req.body ;
+
+  const transporter = nodemailer.createTransport({
+    host : process.env.SMTP_SENDIN,
+    port : process.env.SMTP_PORT_SENDIN,
+    secure : false,
+    auth : {
+      user : process.env.SMTP_SENDIN_USER,
+      pass : process.env.SMTP_SENDIN_PASSWORD,
+    },
+  }) ;
+}
+```
+
+NB : la clé de sécurité doit être configurée à false pour 587 PORT, et true pour 465 PORT. Par défaut, sendinBlue vous donne un PORT 587.
+
+Maintenant, nous pouvons configurer le corps de notre mail :
+
+``js
+const sendContactMail = (req, res) => {
+  const {nom, prénom, téléphone, email, message} = req.body ;
+
+  const transporter = nodemailer.createTransport({
+    host : process.env.SMTP_SENDIN,
+    port : process.env.SMTP_PORT_SENDIN,
+    secure : false,
+    auth : {
+      user : process.env.SMTP_SENDIN_USER,
+      pass : process.env.SMTP_SENDIN_PASSWORD,
+    },
+  }) ;
+
+  const mailOptions = {
+    from : email, // c'est l'adresse à partir de laquelle l'email sera envoyé
+    to : process.env.SMTP_SENDIN_USER, // c'est l'adresse à laquelle l'e-mail sera envoyé
+    sujet : "Nouveau message du formulaire de contact",
+    texte : `${message} \n\n Téléphone : ${phone} \n\n Nom : ${name} \n\n\n Nom : ${surname} \n\n\n Email : ${email}`,
+    html : `<p>${message}</p> <p>Téléphone : ${téléphone}</p> <p>Nom : ${name}</p> <p>Nom de famille : ${surname}</p> <p>Email : ${email}</p>`,
+  } ;
+}
+```
+
+Enfin, nous utilisons la méthode `sendMail` du transporteur :
+
+``js
+const sendContactMail = (req, res) => {
+  const {nom, prénom, téléphone, email, message} = req.body ;
+
+  const transporter = nodemailer.createTransport({
+    host : process.env.SMTP_SENDIN,
+    port : process.env.SMTP_PORT_SENDIN,
+    secure : false,
+    auth : {
+      user : process.env.SMTP_SENDIN_USER,
+      pass : process.env.SMTP_SENDIN_PASSWORD,
+    },
+  }) ;
+
+  const mailOptions = {
+    from : email, // c'est l'adresse à partir de laquelle l'email sera envoyé
+    to : process.env.SMTP_SENDIN_USER, // c'est l'adresse à laquelle l'e-mail sera envoyé
+    sujet : "Nouveau message du formulaire de contact",
+    texte : `${message} \n\n Téléphone : ${phone} \n\n Nom : ${name} \n\n\n Nom : ${surname} \n\n\n Email : ${email}`,
+    html : `<p>${message}</p> <p>Téléphone : ${téléphone}</p> <p>Nom : ${name}</p> <p>Nom de famille : ${surname}</p> <p>Email : ${email}</p>`,
+  } ;
+
+  transporteur
+    .sendMail(mailOptions)
+    .then((info) => {
+      console.warn(info) ;
+      res.status(200).send("Message envoyé") ;
+    })
+    .catch((err) => {
+      console.warn(err) ;
+      res.status(500).send("Quelque chose a mal tourné") ;
+    }) ;
+}
+```
+
+## Ajouter une route
+
+Dans le fichier router.js, nous devons ajouter une route pour envoyer notre email :
+
+```js
+const mailControllers = require("./controllers/mailControllers") ;
+
+router.post("/contact", mailControllers.sendContactMail) ;
+```
+
+Vous pouvez tester votre route avec Postman, ou tout autre client HTTP.
+Lancez d'abord le serveur avec `npm run dev`. Dans Postman, dans le corps, onglet Raw, format JSON, ajoutez
