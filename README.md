@@ -64,7 +64,7 @@ module.exports = {
 Next, we need to create a transporter in which we will setting up our SMTP server :
 
 ```js
-static sendContactMail = (req, res) => {
+const sendContactMail = (req, res) => {
   const {name, surname, phone, email, message} = req.body;
 
   const transporter = nodemailer.createTransport({
@@ -84,7 +84,7 @@ NB : the secure key must be setting up to false for 587 PORT, and true for 465 P
 Now, we can set up the body of our mail :
 
 ```js
-static sendContactMail = (req, res) => {
+const sendContactMail = (req, res) => {
   const {name, surname, phone, email, message} = req.body;
 
   const transporter = nodemailer.createTransport({
@@ -110,7 +110,7 @@ static sendContactMail = (req, res) => {
 Finally, we use the `sendMail` method of the transporter:
 
 ```js
-static sendContactMail = (req, res) => {
+const sendContactMail = (req, res) => {
   const {name, surname, phone, email, message} = req.body;
 
   const transporter = nodemailer.createTransport({
