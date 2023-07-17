@@ -3,8 +3,8 @@ import axios from "axios";
 
 export default function Contact() {
   const [data, setData] = useState({
-    name: "",
-    surname: "",
+    lastName: "",
+    firstName: "",
     email: "",
     phone: "",
     message: "",
@@ -23,7 +23,7 @@ export default function Contact() {
     e.preventDefault();
 
     axios
-      .post("http://localhost:5005/contact", data)
+      .post("http://localhost:5010/contact", data)
       .then((res) => {
         console.info(res);
       })
@@ -38,10 +38,10 @@ export default function Contact() {
     <section>
       <h1>Formulaire d'envoi de message</h1>
       <form onSubmit={handleSubmit}>
-        <label htmlFor="name">Nom:</label>
-        <input onChange={handleChange} type="text" name="name" />
-        <label htmlFor="surname">Prénom:</label>
-        <input onChange={handleChange} type="text" name="surname" />
+        <label htmlFor="lastName">Nom:</label>
+        <input onChange={handleChange} type="text" name="lastName" />
+        <label htmlFor="firstName">Prénom:</label>
+        <input onChange={handleChange} type="text" name="firstName" />
         <label htmlFor="phone">Téléphone:</label>
         <input onChange={handleChange} type="text" name="phone" />
         <label htmlFor="email">Email:</label>
